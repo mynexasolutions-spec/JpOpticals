@@ -290,12 +290,27 @@ export default function HomePage() {
 
       <section className="story-section section-shell">
         <div className="story-image-wrap">
-          <Image src="/Luxury Gold Aviator Sunglasses.png" alt="Gold aviator sunglasses on a deep red background" fill sizes="(max-width: 800px) 100vw, 50vw" />
+          <Image src="/Luxury Gold Aviator Sunglasses.png" alt="Gold aviator sunglasses on a deep red background" fill sizes="(max-width: 800px) 100vw, 55vw" />
+          <div className="story-image-detail" aria-hidden="true">
+            <Image src="/Luxury Gold-Trimmed Sunglasses on Green.png" alt="" fill sizes="(max-width: 800px) 34vw, 20vw" />
+            <span>Detail / 01</span>
+          </div>
+          <span className="story-image-index">JP / 02</span>
+          <span className="story-image-caption">The gold edit <ArrowMark /></span>
         </div>
         <div className="story-copy">
-          <h2>The JP point of view: sharp lines. Soft light.</h2>
-          <p>Every frame is a study in balance: precise enough to stand out, quiet enough to live in.</p>
-          <button className="underlined-link" type="button" onClick={() => showCategory("Sunglasses")}>Discover sunglasses <ArrowMark /></button>
+          <div className="story-copy-head">
+            <span className="story-rule" aria-hidden="true" />
+            <span className="story-copy-index">Featured / 02</span>
+          </div>
+          <h2>Clean shape. Soft light.</h2>
+          <div className="story-product-meta" aria-label="Product details">
+            <span><small>Frame</small>Aviator</span>
+            <span><small>Finish</small>Gold trim</span>
+            <span><small>Edit</small>JP / 02</span>
+          </div>
+          <p className="story-description">Gold frames made for every day. Simple lines, easy to wear, and made to catch the light.</p>
+          <button className="story-cta" type="button" onClick={() => showCategory("Sunglasses")}>Discover sunglasses <ArrowMark /></button>
         </div>
       </section>
 
