@@ -2,50 +2,57 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-
-type Category = "Sunglasses" | "Optical";
-
-type Product = {
-  name: string;
-  price: string;
-  category: Category;
-  image: string;
-  hoverImage?: string;
-  note: string;
-};
+import type { Category, Product } from "./catalog";
+import { useBag } from "./components/store-cart";
 
 const products: Product[] = [
   {
+    slug: "home-glossy-black",
     name: "Glossy Black",
     price: "₹12,800",
+    priceValue: 12800,
     category: "Sunglasses",
     image: "/Glossy_Black_Oversized_Sunglasses-removebg-preview.png",
     hoverImage: "/Glossy_Black_Aviator_Sunglasses-removebg-preview.png",
     note: "Oversized acetate",
+    shape: "Oversized",
+    description: "A polished black acetate frame with an easy oversized proportion.",
   },
   {
+    slug: "home-crystal-edge",
     name: "Crystal Edge",
     price: "₹14,500",
+    priceValue: 14500,
     category: "Sunglasses",
     image: "/Crystal-Edge_Rimless_Gradient_Sunglasses-removebg-preview.png",
     hoverImage: "/Faceted_Gradient_Rimless_Sunglasses-removebg-preview.png",
     note: "Gradient rimless",
+    shape: "Rimless",
+    description: "A light, faceted rimless silhouette with a soft gradient lens.",
   },
   {
+    slug: "home-silver-geometry",
     name: "Silver Geometry",
     price: "₹13,900",
+    priceValue: 13900,
     category: "Optical",
     image: "/products/Rimless_Geometric_Silver_Sunglasses-removebg-preview.png",
     hoverImage: "/products/Rimless_Green_Gradient_Sunglasses-removebg-preview.png",
     note: "Geometric metal",
+    shape: "Geometric",
+    description: "A precise silver rimless frame with a quietly graphic edge.",
   },
   {
+    slug: "home-green-gradient",
     name: "Green Gradient",
     price: "₹13,600",
+    priceValue: 13600,
     category: "Optical",
     image: "/products/Rimless_Green_Gradient_Sunglasses-removebg-preview.png",
     hoverImage: "/products/Rimless_Geometric_Silver_Sunglasses-removebg-preview.png",
     note: "Tinted rimless",
+    shape: "Rimless",
+    description: "A considered green gradient frame for everyday wear.",
   },
 ];
 
@@ -104,10 +111,10 @@ function SearchIcon() {
 export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState<Category>("Sunglasses");
   const [activeHero, setActiveHero] = useState(0);
-  const [bagItems, setBagItems] = useState<Product[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isBagOpen, setIsBagOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { bagItems, addToBag } = useBag();
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -135,20 +142,15 @@ export default function HomePage() {
     document.querySelector("#collection")?.scrollIntoView({ behavior: "smooth" });
   }
 
-  function addToBag(product: Product) {
-    setBagItems((items) => [...items, product]);
-    setIsBagOpen(true);
-  }
-
   return (
     <main>
       <header className={`site-header${isScrolled ? " is-scrolled" : ""}${isMenuOpen ? " menu-is-open" : ""}`}>
         <a className="wordmark" href="#top" aria-label="JP home">JP</a>
         <nav className="desktop-nav" aria-label="Primary navigation">
-          <button type="button" onClick={() => showCategory("Sunglasses")}>Sunglasses</button>
-          <button type="button" onClick={() => showCategory("Optical")}>Optical</button>
-          <a href="#help">Help</a>
-          <a href="#about">About</a>
+          <a href="/collections/sunglasses">Sunglasses</a>
+          <a href="/collections/optical">Optical</a>
+          <a href="/help">Help</a>
+          <a href="/about">About</a>
         </nav>
         <div className="header-actions">
           <button className="text-button menu-toggle" type="button" onClick={() => setIsMenuOpen((open) => !open)} aria-expanded={isMenuOpen}>
@@ -166,10 +168,10 @@ export default function HomePage() {
         </div>
         {isMenuOpen && (
           <nav className="mobile-nav" aria-label="Mobile navigation">
-            <button type="button" onClick={() => showCategory("Sunglasses")}>Sunglasses</button>
-            <button type="button" onClick={() => showCategory("Optical")}>Optical</button>
-            <a href="#help" onClick={() => setIsMenuOpen(false)}>Help</a>
-            <a href="#about" onClick={() => setIsMenuOpen(false)}>About</a>
+            <a href="/collections/sunglasses" onClick={() => setIsMenuOpen(false)}>Sunglasses</a>
+            <a href="/collections/optical" onClick={() => setIsMenuOpen(false)}>Optical</a>
+            <a href="/help" onClick={() => setIsMenuOpen(false)}>Help</a>
+            <a href="/about" onClick={() => setIsMenuOpen(false)}>About</a>
           </nav>
         )}
       </header>
@@ -271,12 +273,12 @@ export default function HomePage() {
         </div>
         <div className="product-grid">
           {visibleProducts.map((product) => (
-            <article className="product-card" key={product.name}>
+              <article className="product-card" key={product.name}>
               <div className={`product-image-wrap${product.hoverImage ? " has-hover-image" : ""}`}>
                 <Image className="product-image product-image-default" src={product.image} alt={product.name} fill sizes="(max-width: 700px) 100vw, 50vw" />
                 {product.hoverImage && <Image className="product-image product-image-hover" src={product.hoverImage} alt="" aria-hidden="true" fill sizes="(max-width: 700px) 100vw, 50vw" />}
                 <span className="product-note">{product.note}</span>
-                <button className="quick-add" type="button" onClick={() => addToBag(product)} aria-label={`Add ${product.name} to bag`}>Add to bag <ArrowMark /></button>
+                <button className="quick-add" type="button" onClick={() => { addToBag(product); setIsBagOpen(true); }} aria-label={`Add ${product.name} to bag`}>Add to bag <ArrowMark /></button>
               </div>
               <div className="product-meta">
                 <h3>{product.name}</h3>
@@ -326,8 +328,8 @@ export default function HomePage() {
           <p className="footer-statement">Look closer.</p>
         </div>
         <div className="footer-links">
-          <div><span className="footer-label">Shop</span><button type="button" onClick={() => showCategory("Sunglasses")}>Sunglasses</button><button type="button" onClick={() => showCategory("Optical")}>Optical</button></div>
-          <div><span className="footer-label">Explore</span><a href="#about">About JP</a><a href="#collection">Best sellers</a></div>
+          <div><span className="footer-label">Shop</span><a href="/collections/sunglasses">Sunglasses</a><a href="/collections/optical">Optical</a></div>
+          <div><span className="footer-label">Explore</span><a href="/about">About JP</a><a href="/help">Help</a><a href="#collection">Best sellers</a></div>
           <div><span className="footer-label">Follow</span><a href="#top">Instagram</a><a href="#top">Pinterest</a></div>
         </div>
         <div className="footer-bottom"><span>© 2025 JP Optical</span><span>Made for your view</span></div>

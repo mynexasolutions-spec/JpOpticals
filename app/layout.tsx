@@ -5,6 +5,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "JP — Optical",
   description: "Modern eyewear, made for the changing light.",
+  icons: {
+    icon: "/fevicon.png",
+    shortcut: "/fevicon.png",
+    apple: "/fevicon.png",
+  },
 };
 
 export default function RootLayout({
