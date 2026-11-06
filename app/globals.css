@@ -561,7 +561,8 @@ button:disabled { cursor: not-allowed; opacity: 0.48; }
 }
 
 @media (max-width: 25rem) {
-  .collection-product-grid { grid-template-columns: 1fr; }
+  .collection-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 10px; }
+  .collection-product-meta h3 { font-size: var(--text-sm); }
   .collection-filter-group { flex-basis: 100%; }
   .product-detail-specs { grid-template-columns: 1fr; }
   .product-detail-buy { align-items: flex-start; flex-direction: column; }
