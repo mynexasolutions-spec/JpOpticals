@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState, type FormEvent } from "react";
+import { BagIcon } from "../components/store-header";
 
 const faqs = [
   {
@@ -63,14 +64,15 @@ function HelpHeader() {
     <header className={`site-header help-site-header${isMenuOpen ? " menu-is-open" : ""}`}>
       <a className="wordmark" href="/" aria-label="JP home">JP</a>
       <nav className="desktop-nav" aria-label="Primary navigation">
+        <a href="/">Home</a>
         <a href="/collections/sunglasses">Sunglasses</a>
         <a href="/collections/optical">Optical</a>
         <a href="/help" aria-current="page">Help</a>
         <a href="/about">About</a>
       </nav>
       <div className="header-actions">
-        <button className="text-button menu-toggle" type="button" onClick={() => setIsMenuOpen((open) => !open)} aria-expanded={isMenuOpen}>
-          {isMenuOpen ? "Close" : "Menu"}
+        <button className="text-button menu-toggle" type="button" onClick={() => setIsMenuOpen((open) => !open)} aria-label={isMenuOpen ? "Close navigation" : "Open navigation"} aria-expanded={isMenuOpen}>
+          <span className="menu-toggle-icon" aria-hidden="true"><span /><span /><span /></span>
         </button>
         <a className="icon-button" href="/#about" aria-label="Open profile" title="Profile">
           <ProfileIcon />
@@ -79,11 +81,12 @@ function HelpHeader() {
           <SearchIcon />
         </a>
         <a className="bag-button" href="/#collection" aria-label="Open bag, 0 items">
-          Bag <span className="bag-count">0</span>
+          <BagIcon /><span className="bag-label">Bag</span><span className="bag-count">0</span>
         </a>
       </div>
       {isMenuOpen && (
         <nav className="mobile-nav" aria-label="Mobile navigation">
+          <a href="/" onClick={() => setIsMenuOpen(false)}>Home</a>
           <a href="/collections/sunglasses" onClick={() => setIsMenuOpen(false)}>Sunglasses</a>
           <a href="/collections/optical" onClick={() => setIsMenuOpen(false)}>Optical</a>
           <a href="/help" onClick={() => setIsMenuOpen(false)} aria-current="page">Help</a>

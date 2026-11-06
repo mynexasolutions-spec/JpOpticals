@@ -24,7 +24,7 @@ export default function CollectionClient({ category }: { category: Category }) {
   const [shape, setShape] = useState<ShapeOption>("All shapes");
   const [isBagOpen, setIsBagOpen] = useState(false);
   const [isReady, setIsReady] = useState(false);
-  const { bagItems, addToBag } = useBag();
+  const { bagItems, addToBag, updateQuantity, removeFromBag, clearBag, totalItems, subtotal, bagPulse } = useBag();
   const details = collectionDetails[category];
   const categoryProducts = products.filter((product) => product.category === category);
 
@@ -53,7 +53,7 @@ export default function CollectionClient({ category }: { category: Category }) {
 
   return (
     <main className={`collection-page collection-page-${category.toLowerCase()}`}>
-      <StoreHeader activeCollection={category} bagCount={bagItems.length} onOpenBag={() => setIsBagOpen(true)} />
+      <StoreHeader activeCollection={category} bagCount={totalItems} bagPulse={bagPulse} onOpenBag={() => setIsBagOpen(true)} />
 
       <section className="collection-hero section-shell" aria-labelledby="collection-title">
         <div className="collection-hero-copy">
@@ -152,7 +152,15 @@ export default function CollectionClient({ category }: { category: Category }) {
         <div className="footer-bottom"><span>&copy; 2025 JP Optical</span><span>Made for your view</span></div>
       </footer>
 
-      <BagDrawer items={bagItems} isOpen={isBagOpen} onClose={() => setIsBagOpen(false)} />
+      <BagDrawer
+        items={bagItems}
+        isOpen={isBagOpen}
+        onClose={() => setIsBagOpen(false)}
+        onUpdateQuantity={updateQuantity}
+        onRemove={removeFromBag}
+        onClear={clearBag}
+        subtotal={subtotal}
+      />
     </main>
   );
 }

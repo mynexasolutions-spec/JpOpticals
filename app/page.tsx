@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { Category, Product } from "./catalog";
-import { useBag } from "./components/store-cart";
+import { BagIcon } from "./components/store-header";
+import { BagDrawer, useBag } from "./components/store-cart";
 
 const products: Product[] = [
   {
@@ -114,7 +115,15 @@ export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isBagOpen, setIsBagOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { bagItems, addToBag } = useBag();
+  const [isBagBumping, setIsBagBumping] = useState(false);
+  const { bagItems, addToBag, updateQuantity, removeFromBag, clearBag, totalItems, subtotal, bagPulse } = useBag();
+
+  useEffect(() => {
+    if (!bagPulse) return;
+    setIsBagBumping(true);
+    const timer = window.setTimeout(() => setIsBagBumping(false), 560);
+    return () => window.clearTimeout(timer);
+  }, [bagPulse]);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -147,14 +156,15 @@ export default function HomePage() {
       <header className={`site-header${isScrolled ? " is-scrolled" : ""}${isMenuOpen ? " menu-is-open" : ""}`}>
         <a className="wordmark" href="#top" aria-label="JP home">JP</a>
         <nav className="desktop-nav" aria-label="Primary navigation">
+          <a href="#top">Home</a>
           <a href="/collections/sunglasses">Sunglasses</a>
           <a href="/collections/optical">Optical</a>
           <a href="/help">Help</a>
           <a href="/about">About</a>
         </nav>
         <div className="header-actions">
-          <button className="text-button menu-toggle" type="button" onClick={() => setIsMenuOpen((open) => !open)} aria-expanded={isMenuOpen}>
-            {isMenuOpen ? "Close" : "Menu"}
+          <button className="text-button menu-toggle" type="button" onClick={() => setIsMenuOpen((open) => !open)} aria-label={isMenuOpen ? "Close navigation" : "Open navigation"} aria-expanded={isMenuOpen}>
+            <span className="menu-toggle-icon" aria-hidden="true"><span /><span /><span /></span>
           </button>
           <button className="icon-button" type="button" aria-label="Open profile" title="Profile" onClick={() => document.querySelector("#about")?.scrollIntoView({ behavior: "smooth" })}>
             <ProfileIcon />
@@ -162,12 +172,13 @@ export default function HomePage() {
           <button className="icon-button" type="button" aria-label="Search the collection" title="Search" onClick={() => document.querySelector("#collection")?.scrollIntoView({ behavior: "smooth" })}>
             <SearchIcon />
           </button>
-          <button className="bag-button" type="button" onClick={() => setIsBagOpen(true)} aria-label={`Open bag, ${bagItems.length} items`}>
-            Bag <span className="bag-count">{bagItems.length}</span>
+          <button className={`bag-button${totalItems ? " has-items" : ""}${isBagBumping ? " is-bag-bumping" : ""}`} type="button" onClick={() => setIsBagOpen(true)} aria-label={`Open bag, ${totalItems} items`}>
+            <BagIcon /><span className="bag-label">Bag</span><span className="bag-count">{totalItems}</span>
           </button>
         </div>
         {isMenuOpen && (
           <nav className="mobile-nav" aria-label="Mobile navigation">
+            <a href="#top" onClick={() => setIsMenuOpen(false)}>Home</a>
             <a href="/collections/sunglasses" onClick={() => setIsMenuOpen(false)}>Sunglasses</a>
             <a href="/collections/optical" onClick={() => setIsMenuOpen(false)}>Optical</a>
             <a href="/help" onClick={() => setIsMenuOpen(false)}>Help</a>
@@ -335,17 +346,15 @@ export default function HomePage() {
         <div className="footer-bottom"><span>© 2025 JP Optical</span><span>Made for your view</span></div>
       </footer>
 
-      {isBagOpen && (
-        <div className="bag-layer" role="presentation" onClick={() => setIsBagOpen(false)}>
-          <aside className="bag-drawer" role="dialog" aria-modal="true" aria-labelledby="bag-title" onClick={(event) => event.stopPropagation()}>
-            <div className="bag-drawer-head"><h2 id="bag-title">Your bag</h2><button className="text-button" type="button" onClick={() => setIsBagOpen(false)}>Close</button></div>
-            {bagItems.length === 0 ? <p className="bag-empty">Your bag is waiting for a good frame.</p> : (
-              <div className="bag-items">{bagItems.map((item, index) => <div className="bag-item" key={`${item.name}-${index}`}><span>{item.name}</span><span>{item.price}</span></div>)}</div>
-            )}
-            <button className="drawer-button" type="button" disabled={bagItems.length === 0}>Continue to checkout <ArrowMark /></button>
-          </aside>
-        </div>
-      )}
+      <BagDrawer
+        items={bagItems}
+        isOpen={isBagOpen}
+        onClose={() => setIsBagOpen(false)}
+        onUpdateQuantity={updateQuantity}
+        onRemove={removeFromBag}
+        onClear={clearBag}
+        subtotal={subtotal}
+      />
     </main>
   );
 }

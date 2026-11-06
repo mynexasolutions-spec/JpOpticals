@@ -16,12 +16,12 @@ function ArrowMark() {
 
 export default function ProductDetailClient({ product }: { product: Product }) {
   const [isBagOpen, setIsBagOpen] = useState(false);
-  const { bagItems, addToBag } = useBag();
+  const { bagItems, addToBag, updateQuantity, removeFromBag, clearBag, totalItems, subtotal, bagPulse } = useBag();
   const collectionPath = product.category === "Sunglasses" ? "/collections/sunglasses" : "/collections/optical";
 
   return (
     <main className="product-detail-page">
-      <StoreHeader activeCollection={product.category} bagCount={bagItems.length} onOpenBag={() => setIsBagOpen(true)} />
+      <StoreHeader activeCollection={product.category} bagCount={totalItems} bagPulse={bagPulse} onOpenBag={() => setIsBagOpen(true)} />
 
       <section className="product-detail section-shell" aria-labelledby="product-title">
         <div className={`product-detail-media${product.presentation === "editorial" ? " is-editorial" : ""}`}>
@@ -58,7 +58,15 @@ export default function ProductDetailClient({ product }: { product: Product }) {
         <div className="footer-bottom"><span>&copy; 2025 JP Optical</span><span>Made for your view</span></div>
       </footer>
 
-      <BagDrawer items={bagItems} isOpen={isBagOpen} onClose={() => setIsBagOpen(false)} />
+      <BagDrawer
+        items={bagItems}
+        isOpen={isBagOpen}
+        onClose={() => setIsBagOpen(false)}
+        onUpdateQuantity={updateQuantity}
+        onRemove={removeFromBag}
+        onClear={clearBag}
+        subtotal={subtotal}
+      />
     </main>
   );
 }
