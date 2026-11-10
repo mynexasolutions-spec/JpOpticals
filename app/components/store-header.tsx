@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Category } from "../catalog";
+import { StoreSearch } from "./store-search";
 
 type StoreHeaderProps = {
   activeCollection?: Category;
@@ -12,6 +13,7 @@ type StoreHeaderProps = {
 
 export function StoreHeader({ activeCollection, bagCount, bagPulse = 0, onOpenBag }: StoreHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isBagBumping, setIsBagBumping] = useState(false);
 
   useEffect(() => {
@@ -35,12 +37,12 @@ export function StoreHeader({ activeCollection, bagCount, bagPulse = 0, onOpenBa
         <button className="text-button menu-toggle" type="button" onClick={() => setIsMenuOpen((open) => !open)} aria-label={isMenuOpen ? "Close navigation" : "Open navigation"} aria-expanded={isMenuOpen}>
           <span className="menu-toggle-icon" aria-hidden="true"><span /><span /><span /></span>
         </button>
-        <a className="icon-button" href="/about" aria-label="Open profile" title="Profile">
+        <a className="icon-button" href="/account" aria-label="Open account" title="Account">
           <ProfileIcon />
         </a>
-        <a className="icon-button" href="#collection" aria-label="Search the collection" title="Search">
+        <button className="icon-button" type="button" aria-label="Search the collection" title="Search" aria-expanded={isSearchOpen} onClick={() => { setIsMenuOpen(false); setIsSearchOpen(true); }}>
           <SearchIcon />
-        </a>
+        </button>
         <button className={`bag-button${bagCount ? " has-items" : ""}${isBagBumping ? " is-bag-bumping" : ""}`} type="button" onClick={onOpenBag} aria-label={`Open bag, ${bagCount} items`}>
           <BagIcon /><span className="bag-label">Bag</span><span className="bag-count">{bagCount}</span>
         </button>
@@ -54,6 +56,7 @@ export function StoreHeader({ activeCollection, bagCount, bagPulse = 0, onOpenBa
           <a href="/about" onClick={() => setIsMenuOpen(false)}>About</a>
         </nav>
       )}
+      <StoreSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </header>
   );
 }
@@ -86,4 +89,3 @@ function SearchIcon() {
     </svg>
   );
 }
-

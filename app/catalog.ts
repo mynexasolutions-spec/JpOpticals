@@ -2,6 +2,7 @@ export type Category = "Sunglasses" | "Optical";
 
 export type Product = {
   slug: string;
+  detailSlug?: string;
   name: string;
   price: string;
   priceValue: number;
@@ -282,3 +283,37 @@ export function getProductBySlug(slug: string) {
   return products.find((product) => product.slug === slug);
 }
 
+function getNoteTokens(note: string): string[] {
+  return note
+    .toLowerCase()
+    .split(/[\s/-]+/)
+    .filter((token) => token.length > 2);
+}
+
+export function getSimilarProducts(product: Product, limit: number): Product[] {
+  const noteTokens = new Set(getNoteTokens(product.note));
+
+  return products
+    .filter((candidate) => candidate.slug !== product.slug)
+    .map((candidate, index) => {
+      const sharedNoteTokens = getNoteTokens(candidate.note).filter((token) =>
+        noteTokens.has(token),
+      ).length;
+      const score =
+        (candidate.category === product.category ? 6 : 0) +
+        (candidate.shape === product.shape ? 4 : 0) +
+        sharedNoteTokens * 2 +
+        (candidate.presentation === product.presentation ? 1 : 0);
+
+      return { candidate, index, score };
+    })
+    .sort(
+      (first, second) =>
+        second.score - first.score ||
+        Math.abs(first.candidate.priceValue - product.priceValue) -
+          Math.abs(second.candidate.priceValue - product.priceValue) ||
+        first.index - second.index,
+    )
+    .slice(0, limit)
+    .map(({ candidate }) => candidate);
+}

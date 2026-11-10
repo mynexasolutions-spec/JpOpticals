@@ -1,14 +1,22 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Category, Product } from "./catalog";
 import { BagIcon } from "./components/store-header";
 import { BagDrawer, useBag } from "./components/store-cart";
+import { StoreFooter } from "./components/store-footer";
+import { StoreSearch } from "./components/store-search";
 
-const products: Product[] = [
+type HomeProduct = Product & {
+  detailSlug: string;
+};
+
+const products: HomeProduct[] = [
   {
     slug: "home-glossy-black",
+    detailSlug: "obsidian-oversized",
     name: "Glossy Black",
     price: "₹12,800",
     priceValue: 12800,
@@ -21,6 +29,7 @@ const products: Product[] = [
   },
   {
     slug: "home-crystal-edge",
+    detailSlug: "crystal-edge",
     name: "Crystal Edge",
     price: "₹14,500",
     priceValue: 14500,
@@ -33,6 +42,7 @@ const products: Product[] = [
   },
   {
     slug: "home-silver-geometry",
+    detailSlug: "silver-geometry-optical",
     name: "Silver Geometry",
     price: "₹13,900",
     priceValue: 13900,
@@ -45,6 +55,7 @@ const products: Product[] = [
   },
   {
     slug: "home-green-gradient",
+    detailSlug: "green-geometry-optical",
     name: "Green Gradient",
     price: "₹13,600",
     priceValue: 13600,
@@ -88,7 +99,11 @@ const categories: { label: string; title: string; description: string; image: st
 ];
 
 function ArrowMark() {
-  return <span aria-hidden="true" className="arrow-mark">↗</span>;
+  return (
+    <svg aria-hidden="true" className="arrow-mark" viewBox="0 0 16 16" focusable="false">
+      <path d="M3 13 13 3M5 3h8v8" />
+    </svg>
+  );
 }
 
 function ProfileIcon() {
@@ -110,9 +125,11 @@ function SearchIcon() {
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState<Category>("Sunglasses");
   const [activeHero, setActiveHero] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isBagOpen, setIsBagOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isBagBumping, setIsBagBumping] = useState(false);
@@ -166,10 +183,10 @@ export default function HomePage() {
           <button className="text-button menu-toggle" type="button" onClick={() => setIsMenuOpen((open) => !open)} aria-label={isMenuOpen ? "Close navigation" : "Open navigation"} aria-expanded={isMenuOpen}>
             <span className="menu-toggle-icon" aria-hidden="true"><span /><span /><span /></span>
           </button>
-          <button className="icon-button" type="button" aria-label="Open profile" title="Profile" onClick={() => document.querySelector("#about")?.scrollIntoView({ behavior: "smooth" })}>
+          <a className="icon-button" href="/account" aria-label="Open account" title="Account">
             <ProfileIcon />
-          </button>
-          <button className="icon-button" type="button" aria-label="Search the collection" title="Search" onClick={() => document.querySelector("#collection")?.scrollIntoView({ behavior: "smooth" })}>
+          </a>
+          <button className="icon-button" type="button" aria-label="Search the collection" title="Search" aria-expanded={isSearchOpen} onClick={() => { setIsMenuOpen(false); setIsSearchOpen(true); }}>
             <SearchIcon />
           </button>
           <button className={`bag-button${totalItems ? " has-items" : ""}${isBagBumping ? " is-bag-bumping" : ""}`} type="button" onClick={() => setIsBagOpen(true)} aria-label={`Open bag, ${totalItems} items`}>
@@ -185,6 +202,7 @@ export default function HomePage() {
             <a href="/about" onClick={() => setIsMenuOpen(false)}>About</a>
           </nav>
         )}
+        <StoreSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       </header>
 
       <section className="hero" id="top" aria-labelledby="hero-title">
@@ -224,7 +242,7 @@ export default function HomePage() {
           ))}
         </div>
         <div className="hero-bottom page-gutter" aria-hidden="true">
-          <span>JP / 2025</span>
+          <span>JP / 2026</span>
           <span>Designed for the everyday</span>
         </div>
       </section>
@@ -246,7 +264,7 @@ export default function HomePage() {
         </div>
         <div className="category-grid">
           {categories.map((category) => (
-            <button className="category-card" type="button" key={category.label} onClick={() => showCategory(category.category)}>
+            <button className="category-card" type="button" key={category.label} aria-label={`Shop ${category.title}`} onClick={() => router.push(`/collections/${category.category.toLowerCase()}`)}>
               <span className="category-image-wrap">
                 <Image src={category.image} alt="" fill sizes="(max-width: 800px) 100vw, 33vw" />
               </span>
@@ -284,15 +302,17 @@ export default function HomePage() {
         </div>
         <div className="product-grid">
           {visibleProducts.map((product) => (
-              <article className="product-card" key={product.name}>
+            <article className="product-card" key={product.name}>
               <div className={`product-image-wrap${product.hoverImage ? " has-hover-image" : ""}`}>
-                <Image className="product-image product-image-default" src={product.image} alt={product.name} fill sizes="(max-width: 700px) 100vw, 50vw" />
-                {product.hoverImage && <Image className="product-image product-image-hover" src={product.hoverImage} alt="" aria-hidden="true" fill sizes="(max-width: 700px) 100vw, 50vw" />}
-                <span className="product-note">{product.note}</span>
-                <button className="quick-add" type="button" onClick={() => { addToBag(product); setIsBagOpen(true); }} aria-label={`Add ${product.name} to bag`}>Add to bag <ArrowMark /></button>
+                <a className="product-image-link" href={`/products/${product.detailSlug}`} aria-label={`View ${product.name}`}>
+                  <Image className="product-image product-image-default" src={product.image} alt={product.name} fill sizes="(max-width: 700px) 100vw, 50vw" />
+                  {product.hoverImage && <Image className="product-image product-image-hover" src={product.hoverImage} alt="" aria-hidden="true" fill sizes="(max-width: 700px) 100vw, 50vw" />}
+                  <span className="product-note">{product.note}</span>
+                </a>
+                <button className="quick-add" type="button" onClick={() => addToBag(product)} aria-label={`Add ${product.name} to bag`}>Add to bag <ArrowMark /></button>
               </div>
               <div className="product-meta">
-                <h3>{product.name}</h3>
+                <h3><a href={`/products/${product.detailSlug}`}>{product.name}</a></h3>
                 <p>{product.category}</p>
                 <span>{product.price}</span>
               </div>
@@ -333,18 +353,7 @@ export default function HomePage() {
         <div><span>03</span><p>Easy to make yours</p></div>
       </section>
 
-      <footer className="site-footer section-shell">
-        <div className="footer-top">
-          <p className="footer-wordmark">JP</p>
-          <p className="footer-statement">Look closer.</p>
-        </div>
-        <div className="footer-links">
-          <div><span className="footer-label">Shop</span><a href="/collections/sunglasses">Sunglasses</a><a href="/collections/optical">Optical</a></div>
-          <div><span className="footer-label">Explore</span><a href="/about">About JP</a><a href="/help">Help</a><a href="#collection">Best sellers</a></div>
-          <div><span className="footer-label">Follow</span><a href="#top">Instagram</a><a href="#top">Pinterest</a></div>
-        </div>
-        <div className="footer-bottom"><span>© 2025 JP Optical</span><span>Made for your view</span></div>
-      </footer>
+      <StoreFooter className="home-footer" />
 
       <BagDrawer
         items={bagItems}

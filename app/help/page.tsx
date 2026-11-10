@@ -3,15 +3,17 @@
 import Image from "next/image";
 import { useEffect, useState, type FormEvent } from "react";
 import { BagIcon } from "../components/store-header";
+import { StoreFooter } from "../components/store-footer";
+import { StoreSearch } from "../components/store-search";
 
 const faqs = [
   {
     question: "How do I find the right frame?",
-    answer: "Start with the shapes you naturally reach for, then consider the width of your face and where the frame sits on your bridge. Our support team can also help narrow the edit if you share a few styles you already love.",
+    answer: "Start with the shapes you naturally reach for, then consider the width of your face and where the frame sits on your bridge. Our support team can also help narrow the selection if you share a few styles you already love.",
   },
   {
     question: "Can I change or cancel my order?",
-    answer: "We can usually update or cancel an order within two hours of confirmation. Send us your order number as soon as possible and we will check its status before it enters fulfilment.",
+    answer: "We can usually update or cancel an order within two hours of confirmation. Send us your order number as soon as possible and we will check its status before it enters fulfillment.",
   },
   {
     question: "How long does delivery take?",
@@ -23,7 +25,7 @@ const faqs = [
   },
   {
     question: "Do you offer prescription lenses?",
-    answer: "Yes. Prescription lens support is available for selected optical frames. Share your prescription with our team and we will confirm the available lens options, timings, and final price.",
+    answer: "Yes. Prescription lens support is available for selected optical frames. Share your prescription with our team and we will confirm the available lens options, timelines, and final price.",
   },
   {
     question: "How can I book a fitting?",
@@ -59,6 +61,7 @@ function SearchIcon() {
 
 function HelpHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
     <header className={`site-header help-site-header${isMenuOpen ? " menu-is-open" : ""}`}>
@@ -74,12 +77,12 @@ function HelpHeader() {
         <button className="text-button menu-toggle" type="button" onClick={() => setIsMenuOpen((open) => !open)} aria-label={isMenuOpen ? "Close navigation" : "Open navigation"} aria-expanded={isMenuOpen}>
           <span className="menu-toggle-icon" aria-hidden="true"><span /><span /><span /></span>
         </button>
-        <a className="icon-button" href="/#about" aria-label="Open profile" title="Profile">
+        <a className="icon-button" href="/account" aria-label="Open account" title="Account">
           <ProfileIcon />
         </a>
-        <a className="icon-button" href="/#collection" aria-label="Search the collection" title="Search">
+        <button className="icon-button" type="button" aria-label="Search the collection" title="Search" aria-expanded={isSearchOpen} onClick={() => { setIsMenuOpen(false); setIsSearchOpen(true); }}>
           <SearchIcon />
-        </a>
+        </button>
         <a className="bag-button" href="/#collection" aria-label="Open bag, 0 items">
           <BagIcon /><span className="bag-label">Bag</span><span className="bag-count">0</span>
         </a>
@@ -93,6 +96,7 @@ function HelpHeader() {
           <a href="/about" onClick={() => setIsMenuOpen(false)}>About</a>
         </nav>
       )}
+      <StoreSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </header>
   );
 }
@@ -185,11 +189,11 @@ export default function HelpPage() {
 
             return (
               <div className={`help-faq-item${isOpen ? " is-open" : ""}`} key={faq.question}>
-                <button className="help-faq-question" type="button" aria-expanded={isOpen} onClick={() => setOpenFaq(isOpen ? -1 : index)}>
+                <button className="help-faq-question" type="button" aria-expanded={isOpen} aria-controls={`faq-answer-${index}`} onClick={() => setOpenFaq(isOpen ? -1 : index)}>
                   <span>{faq.question}</span>
                   <span className="help-faq-icon" aria-hidden="true">+</span>
                 </button>
-                <div className="help-faq-answer" hidden={!isOpen}>
+                <div className="help-faq-answer" id={`faq-answer-${index}`} hidden={!isOpen}>
                   <p>{faq.answer}</p>
                 </div>
               </div>
@@ -275,18 +279,7 @@ export default function HelpPage() {
         </form>
       </section>
 
-      <footer className="site-footer help-footer section-shell">
-        <div className="footer-top">
-          <a className="footer-wordmark" href="/" aria-label="JP home">JP</a>
-          <p className="footer-statement">Look closer.</p>
-        </div>
-        <div className="footer-links">
-          <div><span className="footer-label">Shop</span><a href="/collections/sunglasses">Sunglasses</a><a href="/collections/optical">Optical</a></div>
-          <div><span className="footer-label">Explore</span><a href="/about">About JP</a><a href="/help">Help</a><a href="/#collection">Best sellers</a></div>
-          <div><span className="footer-label">Follow</span><a href="/">Instagram</a><a href="/">Pinterest</a></div>
-        </div>
-        <div className="footer-bottom"><span>&copy; 2025 JP Optical</span><span>Made for your view</span></div>
-      </footer>
+      <StoreFooter className="help-footer" />
     </main>
   );
 }

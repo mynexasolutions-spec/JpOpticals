@@ -1,14 +1,39 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { collectionDetails, products, type Category, type Product } from "../../catalog";
 import { BagDrawer, useBag } from "../../components/store-cart";
+import { StoreFooter } from "../../components/store-footer";
 import { StoreHeader } from "../../components/store-header";
 
 type SortOption = "featured" | "price-low" | "price-high" | "name";
 type PriceOption = "all" | "under-14000" | "14000-16000" | "over-16000";
 type ShapeOption = "All shapes" | Product["shape"];
+type FilterKey = "shape" | "price" | "sort";
+type FilterOption = { value: string; label: string };
+
+const shapeOptions: FilterOption[] = [
+  { value: "All shapes", label: "All shapes" },
+  { value: "Aviator", label: "Aviator" },
+  { value: "Geometric", label: "Geometric" },
+  { value: "Oversized", label: "Oversized" },
+  { value: "Rimless", label: "Rimless" },
+];
+
+const priceOptions: FilterOption[] = [
+  { value: "all", label: "All prices" },
+  { value: "under-14000", label: "Under ₹14,000" },
+  { value: "14000-16000", label: "₹14,000–₹16,000" },
+  { value: "over-16000", label: "Over ₹16,000" },
+];
+
+const sortOptions: FilterOption[] = [
+  { value: "featured", label: "Featured" },
+  { value: "price-low", label: "Price: low to high" },
+  { value: "price-high", label: "Price: high to low" },
+  { value: "name", label: "Name: A to Z" },
+];
 
 function ArrowMark() {
   return (
@@ -18,10 +43,89 @@ function ArrowMark() {
   );
 }
 
+function ChevronIcon() {
+  return (
+    <svg aria-hidden="true" className="filter-chevron" viewBox="0 0 12 12" focusable="false">
+      <path d="m2.25 4.25 3.75 3.5 3.75-3.5" />
+    </svg>
+  );
+}
+
+type FilterMenuProps = {
+  id: string;
+  label: string;
+  value: string;
+  options: FilterOption[];
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  onSelect: (value: string) => void;
+};
+
+function FilterMenu({ id, label, value, options, isOpen, onToggle, onClose, onSelect }: FilterMenuProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const selectedOption = options.find((option) => option.value === value) ?? options[0];
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) onClose();
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  return (
+    <div className="collection-filter-group" ref={menuRef}>
+      <span className="collection-filter-label">{label}</span>
+      <button
+        className="collection-filter-trigger"
+        id={`${id}-trigger`}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        aria-controls={`${id}-menu`}
+        aria-label={`${label}: ${selectedOption.label}`}
+        onClick={onToggle}
+      >
+        <span>{selectedOption.label}</span>
+        <ChevronIcon />
+      </button>
+      {isOpen && (
+        <div className="collection-filter-menu" id={`${id}-menu`} role="menu" aria-labelledby={`${id}-trigger`}>
+          {options.map((option) => (
+            <button
+              className="collection-filter-option"
+              key={option.value}
+              type="button"
+              role="menuitemradio"
+              aria-checked={option.value === value}
+              onClick={() => { onSelect(option.value); onClose(); }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CollectionClient({ category }: { category: Category }) {
   const [sort, setSort] = useState<SortOption>("featured");
   const [price, setPrice] = useState<PriceOption>("all");
   const [shape, setShape] = useState<ShapeOption>("All shapes");
+  const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
   const [isBagOpen, setIsBagOpen] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const { bagItems, addToBag, updateQuantity, removeFromBag, clearBag, totalItems, subtotal, bagPulse } = useBag();
@@ -81,34 +185,36 @@ export default function CollectionClient({ category }: { category: Category }) {
             <a className={category === "Sunglasses" ? "is-active" : ""} href="/collections/sunglasses">Sunglasses <span>10</span></a>
             <a className={category === "Optical" ? "is-active" : ""} href="/collections/optical">Optical <span>10</span></a>
           </div>
-          <div className="collection-filter-group">
-            <label htmlFor="shape-filter">Shape</label>
-            <select id="shape-filter" value={shape} onChange={(event) => setShape(event.target.value as ShapeOption)}>
-              <option>All shapes</option>
-              <option>Aviator</option>
-              <option>Geometric</option>
-              <option>Oversized</option>
-              <option>Rimless</option>
-            </select>
-          </div>
-          <div className="collection-filter-group">
-            <label htmlFor="price-filter">Price</label>
-            <select id="price-filter" value={price} onChange={(event) => setPrice(event.target.value as PriceOption)}>
-              <option value="all">All prices</option>
-              <option value="under-14000">Under ₹14,000</option>
-              <option value="14000-16000">₹14,000–₹16,000</option>
-              <option value="over-16000">Over ₹16,000</option>
-            </select>
-          </div>
-          <div className="collection-filter-group">
-            <label htmlFor="sort-products">Sort by</label>
-            <select id="sort-products" value={sort} onChange={(event) => setSort(event.target.value as SortOption)}>
-              <option value="featured">Featured</option>
-              <option value="price-low">Price: low to high</option>
-              <option value="price-high">Price: high to low</option>
-              <option value="name">Name: A to Z</option>
-            </select>
-          </div>
+          <FilterMenu
+            id="shape-filter"
+            label="Shape"
+            value={shape}
+            options={shapeOptions}
+            isOpen={openFilter === "shape"}
+            onToggle={() => setOpenFilter(openFilter === "shape" ? null : "shape")}
+            onClose={() => setOpenFilter(null)}
+            onSelect={(value) => setShape(value as ShapeOption)}
+          />
+          <FilterMenu
+            id="price-filter"
+            label="Price"
+            value={price}
+            options={priceOptions}
+            isOpen={openFilter === "price"}
+            onToggle={() => setOpenFilter(openFilter === "price" ? null : "price")}
+            onClose={() => setOpenFilter(null)}
+            onSelect={(value) => setPrice(value as PriceOption)}
+          />
+          <FilterMenu
+            id="sort-products"
+            label="Sort by"
+            value={sort}
+            options={sortOptions}
+            isOpen={openFilter === "sort"}
+            onToggle={() => setOpenFilter(openFilter === "sort" ? null : "sort")}
+            onClose={() => setOpenFilter(null)}
+            onSelect={(value) => setSort(value as SortOption)}
+          />
         </div>
 
         {visibleProducts.length > 0 ? (
@@ -128,7 +234,7 @@ export default function CollectionClient({ category }: { category: Category }) {
                   </div>
                   <span>{product.price}</span>
                 </div>
-                <button className="collection-add-button" type="button" onClick={() => { addToBag(product); setIsBagOpen(true); }}>
+                <button className="collection-add-button" type="button" onClick={() => addToBag(product)}>
                   Add to bag <ArrowMark />
                 </button>
               </article>
@@ -139,18 +245,7 @@ export default function CollectionClient({ category }: { category: Category }) {
         )}
       </section>
 
-      <footer className="site-footer collection-footer section-shell">
-        <div className="footer-top">
-          <a className="footer-wordmark" href="/" aria-label="JP home">JP</a>
-          <p className="footer-statement">Look closer.</p>
-        </div>
-        <div className="footer-links">
-          <div><span className="footer-label">Shop</span><a href="/collections/sunglasses">Sunglasses</a><a href="/collections/optical">Optical</a></div>
-          <div><span className="footer-label">Explore</span><a href="/about">About JP</a><a href="/help">Help</a><a href="#collection">Best sellers</a></div>
-          <div><span className="footer-label">Follow</span><a href="/">Instagram</a><a href="/">Pinterest</a></div>
-        </div>
-        <div className="footer-bottom"><span>&copy; 2025 JP Optical</span><span>Made for your view</span></div>
-      </footer>
+      <StoreFooter className="collection-footer" activeCategory={category} />
 
       <BagDrawer
         items={bagItems}
@@ -164,4 +259,3 @@ export default function CollectionClient({ category }: { category: Category }) {
     </main>
   );
 }
-

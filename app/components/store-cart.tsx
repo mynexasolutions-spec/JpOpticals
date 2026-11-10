@@ -15,6 +15,19 @@ function isProductRecord(value: unknown): value is Product {
   return typeof value === "object" && value !== null && "slug" in value && "name" in value && "priceValue" in value;
 }
 
+function mergeBagItems(items: BagItem[]): BagItem[] {
+  const mergedItems = new Map<string, BagItem>();
+
+  items.forEach((item) => {
+    const existingItem = mergedItems.get(item.product.slug);
+    mergedItems.set(item.product.slug, existingItem
+      ? { ...existingItem, quantity: existingItem.quantity + item.quantity }
+      : item);
+  });
+
+  return Array.from(mergedItems.values());
+}
+
 function readBag(): BagItem[] {
   if (typeof window === "undefined") return [];
 
@@ -26,26 +39,30 @@ function readBag(): BagItem[] {
     if (!Array.isArray(parsed)) return [];
 
     if (parsed.every((item) => typeof item === "object" && item !== null && "product" in item && "quantity" in item)) {
-      return parsed.filter((item): item is BagItem => {
+      return mergeBagItems(parsed.filter((item): item is BagItem => {
         if (typeof item !== "object" || item === null || !("product" in item) || !("quantity" in item)) return false;
         const candidate = item as { product: unknown; quantity: unknown };
         return isProductRecord(candidate.product) && typeof candidate.quantity === "number" && candidate.quantity > 0;
-      });
+      }));
     }
 
-    return parsed.filter(isProductRecord).map((product) => ({ product, quantity: 1 }));
+    return mergeBagItems(parsed.filter(isProductRecord).map((product) => ({ product, quantity: 1 })));
   } catch {
     return [];
   }
 }
 
 function saveBag(items: BagItem[]) {
-  window.localStorage.setItem(BAG_STORAGE_KEY, JSON.stringify(items));
+  window.localStorage.setItem(BAG_STORAGE_KEY, JSON.stringify(mergeBagItems(items)));
   window.dispatchEvent(new Event("jp-optical-bag-updated"));
 }
 
 export function formatPrice(value: number) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(value);
+}
+
+function getProductHref(product: Product) {
+  return `/products/${product.detailSlug ?? product.slug}`;
 }
 
 export function useBag() {
@@ -65,10 +82,11 @@ export function useBag() {
 
   function addToBag(product: Product) {
     setBagItems((items) => {
-      const existingItem = items.find((item) => item.product.slug === product.slug);
+      const normalizedItems = mergeBagItems(items);
+      const existingItem = normalizedItems.find((item) => item.product.slug === product.slug);
       const nextItems = existingItem
-        ? items.map((item) => item.product.slug === product.slug ? { ...item, quantity: item.quantity + 1 } : item)
-        : [...items, { product, quantity: 1 }];
+        ? normalizedItems.map((item) => item.product.slug === product.slug ? { ...item, quantity: item.quantity + 1 } : item)
+        : [...normalizedItems, { product, quantity: 1 }];
       saveBag(nextItems);
       return nextItems;
     });
@@ -77,9 +95,10 @@ export function useBag() {
 
   function updateQuantity(slug: string, quantity: number) {
     setBagItems((items) => {
+      const normalizedItems = mergeBagItems(items);
       const nextItems = quantity > 0
-        ? items.map((item) => item.product.slug === slug ? { ...item, quantity } : item)
-        : items.filter((item) => item.product.slug !== slug);
+        ? normalizedItems.map((item) => item.product.slug === slug ? { ...item, quantity } : item)
+        : normalizedItems.filter((item) => item.product.slug !== slug);
       saveBag(nextItems);
       return nextItems;
     });
@@ -126,8 +145,22 @@ export function BagDrawer({ items, isOpen, onClose, onUpdateQuantity, onRemove, 
     if (!isOpen) {
       setIsCheckoutOpen(false);
       setOrderPlaced(false);
+      return;
     }
-  }, [isOpen]);
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -177,9 +210,11 @@ export function BagDrawer({ items, isOpen, onClose, onUpdateQuantity, onRemove, 
             <div className="bag-items">
               {items.map((item) => (
                 <div className="bag-item" key={item.product.slug}>
-                  <Image className="bag-item-image" src={item.product.image} alt="" width={72} height={72} />
+                  <a className="bag-item-image-link" href={getProductHref(item.product)} aria-label={`View ${item.product.name}`}>
+                    <Image className="bag-item-image" src={item.product.image} alt="" width={72} height={72} />
+                  </a>
                   <div className="bag-item-content">
-                    <strong>{item.product.name}</strong>
+                    <a className="bag-item-product-link" href={getProductHref(item.product)}>{item.product.name}</a>
                     <span>{item.product.note}</span>
                     <div className="bag-quantity" aria-label={`Quantity for ${item.product.name}`}>
                       <button type="button" onClick={() => onUpdateQuantity(item.product.slug, item.quantity - 1)} aria-label={`Decrease ${item.product.name} quantity`}>−</button>
@@ -206,4 +241,3 @@ export function BagDrawer({ items, isOpen, onClose, onUpdateQuantity, onRemove, 
     </div>
   );
 }
-

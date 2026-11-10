@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { BagIcon } from "../components/store-header";
+import { StoreFooter } from "../components/store-footer";
+import { StoreSearch } from "../components/store-search";
 
 function ArrowMark() {
   return (
@@ -32,6 +34,7 @@ function SearchIcon() {
 
 function AboutHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
     <header className={`site-header about-site-header${isMenuOpen ? " menu-is-open" : ""}`}>
@@ -47,12 +50,12 @@ function AboutHeader() {
         <button className="text-button menu-toggle" type="button" onClick={() => setIsMenuOpen((open) => !open)} aria-label={isMenuOpen ? "Close navigation" : "Open navigation"} aria-expanded={isMenuOpen}>
           <span className="menu-toggle-icon" aria-hidden="true"><span /><span /><span /></span>
         </button>
-        <a className="icon-button" href="/#about" aria-label="Open profile" title="Profile">
+        <a className="icon-button" href="/account" aria-label="Open account" title="Account">
           <ProfileIcon />
         </a>
-        <a className="icon-button" href="/#collection" aria-label="Search the collection" title="Search">
+        <button className="icon-button" type="button" aria-label="Search the collection" title="Search" aria-expanded={isSearchOpen} onClick={() => { setIsMenuOpen(false); setIsSearchOpen(true); }}>
           <SearchIcon />
-        </a>
+        </button>
         <a className="bag-button" href="/#collection" aria-label="Open bag, 0 items">
           <BagIcon /><span className="bag-label">Bag</span><span className="bag-count">0</span>
         </a>
@@ -66,6 +69,7 @@ function AboutHeader() {
           <a href="/about" onClick={() => setIsMenuOpen(false)} aria-current="page">About</a>
         </nav>
       )}
+      <StoreSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </header>
   );
 }
@@ -179,18 +183,7 @@ export default function AboutPage() {
         <a className="about-cta-link" href="/#collection">Shop the collection <ArrowMark /></a>
       </section>
 
-      <footer className="site-footer about-footer section-shell">
-        <div className="footer-top">
-          <a className="footer-wordmark" href="/" aria-label="JP home">JP</a>
-          <p className="footer-statement">Look closer.</p>
-        </div>
-        <div className="footer-links">
-          <div><span className="footer-label">Shop</span><a href="/collections/sunglasses">Sunglasses</a><a href="/collections/optical">Optical</a></div>
-          <div><span className="footer-label">Explore</span><a href="/about">About JP</a><a href="/help">Help</a><a href="/#collection">Best sellers</a></div>
-          <div><span className="footer-label">Follow</span><a href="/">Instagram</a><a href="/">Pinterest</a></div>
-        </div>
-        <div className="footer-bottom"><span>&copy; 2025 JP Optical</span><span>Made for your view</span></div>
-      </footer>
+      <StoreFooter className="about-footer" />
     </main>
   );
 }
